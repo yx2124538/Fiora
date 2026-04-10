@@ -24,7 +24,6 @@ import run.RunNucleiAction;
 
 public class LineEntryMenu extends JPopupMenu {
 
-
 	private static final long serialVersionUID = 1L;
 	PrintWriter stdout = BurpExtender.getStdout();
 	PrintWriter stderr = BurpExtender.getStderr();
@@ -34,27 +33,27 @@ public class LineEntryMenu extends JPopupMenu {
 		Commons.browserOpen("[]", null);
 	}
 
-	public static String getValue(int rowIndex,int columnIndex) {
-		//由于所有的返回值都是String类型的，都可以直接强制类型转换
+	public static String getValue(int rowIndex, int columnIndex) {
+		// 由于所有的返回值都是String类型的，都可以直接强制类型转换
 		Object value = lineTable.getModel().getValueAt(rowIndex, columnIndex);
-		return (String)value;
+		return (String) value;
 
 	}
 
-	LineEntryMenu(final LineTable lineTable, final int[] rows,final int columnIndex){
+	LineEntryMenu(final LineTable lineTable, final int[] rows, final int columnIndex) {
 		this.lineTable = lineTable;
 
-		JMenuItem itemNumber = new JMenuItem(new AbstractAction(rows.length+" Items Selected") {
+		JMenuItem itemNumber = new JMenuItem(new AbstractAction(rows.length + " Items Selected") {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
 			}
 		});
 
-		//one line
+		// one line
 		JMenuItem editPoCItem = new JMenuItem(new AbstractAction("Edit With VSCode(Double Click PoCFile)") {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
-				if (rows.length >=50) {
+				if (rows.length >= 50) {
 					return;
 				}
 				LineEntry selecteEntry = lineTable.getLineTabelModel().getLineEntries().getValueAtIndex(rows[0]);
@@ -63,13 +62,14 @@ public class LineEntryMenu extends JPopupMenu {
 			}
 		});
 
-		//one line
+		// one line
 		JMenuItem showInExplorerItem = new JMenuItem(new AbstractAction("Show In Folder") {
-			@Override		
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					//JOptionPane.showMessageDialog(null,"Not found editor(code.exe idle.bat) in environment.");
-					if (rows != null && rows.length >=0){
+					// JOptionPane.showMessageDialog(null,"Not found editor(code.exe idle.bat) in
+					// environment.");
+					if (rows != null && rows.length >= 0) {
 						LineEntry entry = lineTable.getLineTabelModel().getLineEntries().getValueAtIndex(rows[0]);
 						String path = entry.getPocFileFullPath();
 						String dir = new File(path).getParent();
@@ -81,15 +81,15 @@ public class LineEntryMenu extends JPopupMenu {
 			}
 		});
 
-		//multiple line
+		// multiple line
 		JMenuItem copyFilePathItem = new JMenuItem(new AbstractAction("Copy File Path") {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
-				if (rows.length >=50) {
+				if (rows.length >= 50) {
 					return;
 				}
 				List<String> paths = new ArrayList<String>();
-				for (int row:rows) {
+				for (int row : rows) {
 					LineEntry entry = lineTable.getLineTabelModel().getLineEntries().getValueAtIndex(row);
 					String path = entry.getPocFileFullPath();
 					paths.add(path);
@@ -101,7 +101,6 @@ public class LineEntryMenu extends JPopupMenu {
 
 			}
 		});
-
 
 		/**
 		 * nuclei -u 127.0.0.1
@@ -142,17 +141,17 @@ public class LineEntryMenu extends JPopupMenu {
 			public void actionPerformed(ActionEvent actionEvent) {
 				List<String> paths = new ArrayList<String>();
 				List<String> workflowPaths = new ArrayList<String>();
-				for (int row:rows) {
+				for (int row : rows) {
 					LineEntry entry = lineTable.getLineTabelModel().getLineEntries().getValueAtIndex(row);
 					String path = entry.getPocFileFullPath();
 					if (entry.isWorkflow()) {
 						workflowPaths.add(path);
-					}else {
+					} else {
 						paths.add(path);
 					}
 				}
 				List<String> targets = Commons.getLinesFromTextArea(PoCPanel.getTitleTable().getTextAreaTarget());
-				String Command = RunNucleiAction.genSeletedPoCCommand(targets, paths,workflowPaths);
+				String Command = RunNucleiAction.genSeletedPoCCommand(targets, paths, workflowPaths);
 				Commons.writeToClipboard(Command.trim());
 
 			}
@@ -166,17 +165,17 @@ public class LineEntryMenu extends JPopupMenu {
 			public void actionPerformed(ActionEvent actionEvent) {
 				List<String> paths = new ArrayList<String>();
 				List<String> workflowPaths = new ArrayList<String>();
-				for (int row:rows) {
+				for (int row : rows) {
 					LineEntry entry = lineTable.getLineTabelModel().getLineEntries().getValueAtIndex(row);
 					String path = entry.getPocFileFullPath();
 					if (entry.isWorkflow()) {
 						workflowPaths.add(path);
-					}else {
+					} else {
 						paths.add(path);
 					}
 				}
 				List<String> targets = Commons.getLinesFromTextArea(PoCPanel.getTitleTable().getTextAreaTarget());
-				String Command = RunNucleiAction.genSeletedPoCCommand(targets, paths,workflowPaths);
+				String Command = RunNucleiAction.genSeletedPoCCommand(targets, paths, workflowPaths);
 				RunNucleiAction.run(Command);
 			}
 		});
@@ -190,16 +189,20 @@ public class LineEntryMenu extends JPopupMenu {
 			public void actionPerformed(ActionEvent actionEvent) {
 				LineEntry entry = lineTable.getLineTabelModel().getLineEntries().getValueAtIndex(rows[0]);
 				String tags = entry.getTags();
-				try {//用户搜索什么内容，很有可能就是要用什么PoC
+				List<String> possibleTags = new ArrayList<>();
+				try {// 用户搜索什么内容，很有可能就是要用什么PoC
 					String searchWord = PoCPanel.getTextFieldSearch().getText().toLowerCase();
 					List<String> tagList = Arrays.asList(tags.split(","));
-					if (tagList.contains(searchWord)) {
-						tags = searchWord;
+					for (String tag : tagList) {
+						if (tag.contains(searchWord)) {
+							possibleTags.add(tag);
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				tags = getTags(tags);
+				String result = String.join(",", possibleTags);
+				tags = getTags(result);
 				List<String> targets = Commons.getLinesFromTextArea(PoCPanel.getTitleTable().getTextAreaTarget());
 				String Command = RunNucleiAction.genTagsCommand(targets, tags);
 				Commons.writeToClipboard(Command.trim());
@@ -220,16 +223,21 @@ public class LineEntryMenu extends JPopupMenu {
 			public void actionPerformed(ActionEvent actionEvent) {
 				LineEntry entry = lineTable.getLineTabelModel().getLineEntries().getValueAtIndex(rows[0]);
 				String tags = entry.getTags();
-				try {//用户搜索什么内容，很有可能就是要用什么PoC
+
+				List<String> possibleTags = new ArrayList<>();
+				try {// 用户搜索什么内容，很有可能就是要用什么PoC
 					String searchWord = PoCPanel.getTextFieldSearch().getText().toLowerCase();
 					List<String> tagList = Arrays.asList(tags.split(","));
-					if (tagList.contains(searchWord)) {
-						tags = searchWord;
+					for (String tag : tagList) {
+						if (tag.contains(searchWord)) {
+							possibleTags.add(tag);
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				tags = getTags(tags);
+				String result = String.join(",", possibleTags);
+				tags = getTags(result);
 				List<String> targets = Commons.getLinesFromTextArea(PoCPanel.getTitleTable().getTextAreaTarget());
 				String Command = RunNucleiAction.genTagsCommand(targets, tags);
 
@@ -242,19 +250,20 @@ public class LineEntryMenu extends JPopupMenu {
 			}
 		});
 
-		//multiple line
+		// multiple line
 		JMenuItem googleSearchItem = new JMenuItem(new AbstractAction("Seach On Google") {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
-				if (rows.length >=50) {
+				if (rows.length >= 50) {
 					return;
 				}
-				for (int row:rows) {
-					//String searchContent = (String)lineTable.getModel().getValueAt(row, columnIndex);
+				for (int row : rows) {
+					// String searchContent = (String)lineTable.getModel().getValueAt(row,
+					// columnIndex);
 					String searchContent = LineEntryMenu.getValue(row, columnIndex);
 					try {
 						searchContent = URLEncoder.encode(searchContent, StandardCharsets.UTF_8.toString());
-						String url= "https://www.google.com/search?q="+searchContent;
+						String url = "https://www.google.com/search?q=" + searchContent;
 						Commons.browserOpen(url, null);
 					} catch (Exception e) {
 						e.printStackTrace(stderr);
@@ -263,18 +272,18 @@ public class LineEntryMenu extends JPopupMenu {
 			}
 		});
 
-		//multiple line
+		// multiple line
 		JMenuItem SearchOnGithubItem = new JMenuItem(new AbstractAction("Seach On Github") {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
-				if (rows.length >=50) {
+				if (rows.length >= 50) {
 					return;
 				}
-				for (int row:rows) {
+				for (int row : rows) {
 					String searchContent = LineEntryMenu.getValue(row, columnIndex);
 					try {
 						searchContent = URLEncoder.encode(searchContent, StandardCharsets.UTF_8.toString());
-						String url= "https://github.com/search?q=%22"+searchContent+"%22&type=Code";
+						String url = "https://github.com/search?q=%22" + searchContent + "%22&type=Code";
 						Commons.browserOpen(url, null);
 					} catch (Exception e) {
 						e.printStackTrace(stderr);
@@ -283,19 +292,19 @@ public class LineEntryMenu extends JPopupMenu {
 			}
 		});
 
-		//multiple line
+		// multiple line
 		JMenuItem SearchOnFoFaItem = new JMenuItem(new AbstractAction("Seach On FoFa") {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
 
-				if (rows.length >=50) {
+				if (rows.length >= 50) {
 					return;
 				}
-				for (int row:rows) {
+				for (int row : rows) {
 					String searchContent = LineEntryMenu.getValue(row, columnIndex);
 					try {
 						searchContent = URLEncoder.encode(searchContent, StandardCharsets.UTF_8.toString());
-						String url= "https://fofa.so/result?q=%22"+searchContent+"%22";
+						String url = "https://fofa.so/result?q=%22" + searchContent + "%22";
 						Commons.browserOpen(url, null);
 					} catch (Exception e) {
 						e.printStackTrace(stderr);
@@ -305,7 +314,7 @@ public class LineEntryMenu extends JPopupMenu {
 
 		});
 
-		//one line
+		// one line
 		JMenuItem SearchOnFioraItem = new JMenuItem(new AbstractAction("Seach On Fiora") {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -314,16 +323,14 @@ public class LineEntryMenu extends JPopupMenu {
 			}
 		});
 
-
-
 		this.add(itemNumber);
 		this.addSeparator();
 
-		this.add(editPoCItem);//file operate
+		this.add(editPoCItem);// file operate
 		this.add(showInExplorerItem);
 		this.add(copyFilePathItem);
 
-		this.addSeparator();//run check
+		this.addSeparator();// run check
 		this.add(genAllPoCCmd);
 		this.add(genSinglePoCCmd);
 		this.add(genCmdWithTags);
